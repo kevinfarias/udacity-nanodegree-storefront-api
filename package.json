@@ -4,8 +4,8 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-    "db:create": "db-migrate db:create challenge",
-    "db:migrate": "db-migrate db:migrate up",
+    "db:create": "node ./createDB.js",
+    "db:migrate": "db-migrate db:migrate up --dry-run",
     "start": "node src/server.ts",
     "watch": "tsc-watch --onSuccess \"node ./dist/server.js\"",
     "test": "db-migrate db:drop test && db-migrate db:create test && db-migrate up -e test && cross-env ENV=test jasmine-ts",
