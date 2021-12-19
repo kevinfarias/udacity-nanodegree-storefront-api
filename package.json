@@ -6,7 +6,7 @@
   "scripts": {
     "create": "node ./createDB.js",
     "migrate": "db-migrate up",
-    "start": "node src/server.ts",
+    "start": "node dist/server.js",
     "watch": "tsc-watch --onSuccess \"node ./dist/server.js\"",
     "test": "db-migrate db:drop test && db-migrate db:create test && db-migrate up -e test && cross-env ENV=test jasmine-ts",
     "build": "npx tsc"
