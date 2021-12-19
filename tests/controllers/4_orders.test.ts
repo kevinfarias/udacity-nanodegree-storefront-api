@@ -18,7 +18,11 @@ describe("Test order routes", (): void => {
     const res = await supertest(app)
       .post("/api/orders")
       .set("Authorization", `Bearer ${token}`)
-      .send({ product: 1, quantity: 15, userid: 1, complete: false })
+      .send({
+        products: [{ product: 1, quantity: 15 }],
+        userid: 1,
+        complete: false,
+      })
       .expect(200)
       .expect("Content-Type", /json/);
     expect(res.body.id).toBeDefined();

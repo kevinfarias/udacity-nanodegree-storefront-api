@@ -1,14 +1,17 @@
 // @ts-ignore
 import Client from "../database";
 
-export type Order = {
-  id?: number;
+export type OrderProduct = {
   product: number;
   quantity: number;
-  userid: number;
-  complete: boolean;
 };
 
+export type Order = {
+  id?: number;
+  userid: number;
+  complete: boolean;
+  products?: OrderProduct[];
+};
 export class OrderStore {
   async index(): Promise<Order[]> {
     try {
@@ -28,61 +31,72 @@ export class OrderStore {
 
   async show(id: number): Promise<Order> {
     try {
-      const sql = "SELECT * FROM orders WHERE id=($1)";
-      // @ts-ignore
       const conn = await Client.connect();
 
+      const sql = "SELECT * FROM orders WHERE id=($1)";
       const result = await conn.query(sql, [id]);
+
+      const sqlProducts =
+        "SELECT product, quantity FROM orders_products WHERE orderid=($1)";
+      const products = await conn.query(sqlProducts, [id]);
 
       conn.release();
 
-      return result.rows[0];
+      return { ...result.rows[0], products: products.rows };
     } catch (err) {
       throw new Error(`Could not find order ${id}. Error: ${err}`);
     }
   }
 
   async create(b: Order): Promise<Order> {
-    if (!b.quantity) {
+    const totalQuantity: number | undefined = b.products
+      ?.map((row) => row.quantity)
+      .reduce((a: number, b: number) => {
+        return a + b;
+      });
+    if (!b.products || !totalQuantity) {
       throw new Error("You must pass a real quantity!");
     }
     try {
-      const sql =
-        "INSERT INTO orders (product, quantity, userid, complete) VALUES ($1, $2, $3, $4) RETURNING *";
-      // @ts-ignore
       const conn = await Client.connect();
+      let order;
+      if (!b.id) {
+        const sqlCreate =
+          "INSERT INTO orders (userid, complete) VALUES ($1, $2) RETURNING *";
+        const result = await conn.query(sqlCreate, [b.userid, b.complete]);
+        order = result.rows[0];
+      } else {
+        order = await this.show(b.id);
+      }
+      const orderId = order.id;
+      b.products.map(async (row: OrderProduct): Promise<void> => {
+        const sql =
+          "INSERT INTO orders_products (product, orderid, quantity) VALUES ($1, $2, $3) RETURNING *";
+        await conn.query(sql, [row.product, orderId, row.quantity]);
+      });
 
-      const result = await conn.query(sql, [
-        b.product,
-        b.quantity,
-        b.userid,
-        b.complete,
-      ]);
-
-      const order = result.rows[0];
+      const sqlProducts =
+        "SELECT product, quantity FROM orders_products WHERE orderid=($1)";
+      const products = (await conn.query(sqlProducts, [orderId])).rows;
 
       conn.release();
 
-      return order;
+      return { ...order, products };
     } catch (err) {
-      throw new Error(`Could not add new order ${b.product}. Error: ${err}`);
+      throw new Error(
+        `Could not add new order ${JSON.stringify(b.products)}. Error: ${err}`
+      );
     }
   }
 
   async update(b: Order): Promise<Order> {
     try {
       const sql =
-        "UPDATE orders set product = $1, quantity = $2, userid = $3, complete = $4 where id = $5 RETURNING *";
+        "UPDATE orders set userid = $1, complete = $2 where id = $3 RETURNING *";
       // @ts-ignore
       const conn = await Client.connect();
 
-      const result = await conn.query(sql, [
-        b.product,
-        b.quantity,
-        b.userid,
-        b.complete,
-        b.id,
-      ]);
+      const result = await conn.query(sql, [b.userid, b.complete, b.id]);
       const order = result.rows[0];
 
       conn.release();
@@ -127,10 +141,12 @@ export class OrderStore {
 
   async delete(id: number): Promise<Order> {
     try {
-      const sql = "DELETE FROM orders WHERE id=($1)";
-      // @ts-ignore
       const conn = await Client.connect();
 
+      const sqlProducts = "DELETE FROM orders_products WHERE orderid=($1)";
+      await conn.query(sqlProducts, [id]);
+
+      const sql = "DELETE FROM orders WHERE id=($1)";
       const result = await conn.query(sql, [id]);
 
       const order = result.rows[0];

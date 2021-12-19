@@ -1,14 +1,18 @@
-import { Order, OrderStore } from "../../src/models/order";
+import { Order, OrderProduct, OrderStore } from "../../src/models/order";
 
 const store = new OrderStore();
 
 describe("Order Model", () => {
   const data: Order = {
-    product: 2,
-    quantity: 10,
     userid: 2,
     complete: false,
   };
+  const products: OrderProduct[] = [
+    {
+      product: 2,
+      quantity: 10,
+    },
+  ];
   let lastId: number;
   beforeAll(async (): Promise<void> => {
     await store.cleanAll();
@@ -36,16 +40,17 @@ describe("Order Model", () => {
   });
 
   it("create method should add a order", async () => {
-    const result = await store.create(data);
+    const result = await store.create({ ...data, products });
     expect(result).toEqual({
       ...data,
       id: lastId,
+      products: products,
     });
   });
 
   it("create method without quantity MUST throw an error", async () => {
     await expectAsync(
-      store.create({ ...data, quantity: 0 })
+      store.create({ ...data, products: [{ ...products[0], quantity: 0 }] })
     ).toBeRejectedWithError("You must pass a real quantity!");
   });
 
@@ -64,6 +69,7 @@ describe("Order Model", () => {
     expect(result).toEqual({
       ...data,
       id: lastId,
+      products: products,
     });
   });
 
@@ -85,9 +91,10 @@ describe("Order Model", () => {
   });
 
   it("create method should add a order again", async () => {
-    const result = await store.create(data);
+    const result = await store.create({ ...data, products });
     expect(result).toEqual({
       ...data,
+      products,
       id: lastId + 1,
     });
   });

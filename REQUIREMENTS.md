@@ -53,6 +53,19 @@ These are the notes from a meeting with the frontend developer that describe wha
 
 #### Orders
 
+- Insert a new order: POST /orders
+  - Headers: Bearer token
+  - Body: {
+    - userid: number,
+    - complete: boolean,
+    - products: object[]: [
+      - {
+        - product: number,
+        - quantity: number
+      - }
+      - ...
+    - ]
+  - }
 - Current Order by user: GET /orders/current
   - Headers: Bearer token
 - Completed Orders by user: GET /orders/completed
@@ -60,29 +73,34 @@ These are the notes from a meeting with the frontend developer that describe wha
 
 ## Data Shapes
 
-#### Category
+#### Category: table `categories`
 
 - id: integer, primary key
 - name: string
 
-#### Product
+#### Product: table `products`
 
 - id: integer, primary key
 - name: string
 - price: float
-- category: integer, foreign key, references category.id
+- category: integer, foreign key, references categories.id
 
-#### User
+#### User: table `users`
 
 - id: integer, primary key
 - firstName: string
 - lastName: string
 - password: string
 
-#### Orders
+#### Orders: table `orders`
 
 - id: integer, primary key
-- product: integer, foreign key, references product.id
-- quantity (of product in order): integer, minimal value: 1
-- user_id: integer, foreign key, references user.id
+- user_id: integer, foreign key, references users.id
 - complete: boolean
+
+### Products in orders: table `orders_products`
+
+- id: bigint, primary key
+- orderid: integer, foreign key, references orders.id
+- product: integer, foreign key, references products.id
+- quantity (of product in order): integer, minimal value: 1

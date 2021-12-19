@@ -34,8 +34,7 @@ export const create = async (
   res: express.Response
 ): Promise<void> => {
   const data: Order = {
-    product: Number(req.body.product),
-    quantity: Number(req.body.quantity),
+    products: req.body.products,
     userid: Number(req.body.userid),
     complete: Boolean(req.body.completed),
   };

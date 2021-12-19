@@ -6,7 +6,8 @@ export const retrievePopular = async (amount: number): Promise<object[]> => {
     const conn = await Client.connect();
     const sql = `SELECT p.*, count(distinct pa.id) as order_quantity 
                  FROM orders pa
-                 JOIN products p on pa.product = p.id
+                 JOIN orders_products op on pa.id = op.orderid
+                 JOIN products p on op.product = p.id
                  GROUP BY p.id
                  ORDER BY count(distinct pa.id) DESC
                  LIMIT $1`;
