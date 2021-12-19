@@ -13,9 +13,12 @@ const conn = new pg.Pool({
   }@${process.env.DB_HOST}:${process.env.DB_PORT}/postgres`,
 });
 
-const conn = await Client.connect();
-const sql = `CREATE DATABASE ${process.env.DB_NAME}`;
+conn.connect().then((connection) => {
+    const sql = `CREATE DATABASE ${process.env.DB_NAME}`;
+    connection.query(sql);
 
-await conn.query(sql);
-
-conn.release();
+    process.exit();
+}).catch((err) => {
+    console.log('err', err)
+    process.exit();
+});
