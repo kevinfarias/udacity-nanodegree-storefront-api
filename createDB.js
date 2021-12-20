@@ -8,7 +8,7 @@ if (!process.env.ENV) {
 }
 
 const conn = new pg.Pool({
-  connectionString: `postgres://${process.env.DB_USER}:${
+  connectionString: `postgres://postgres:${
     process.env.DB_PASSWORD
   }@${process.env.DB_HOST}:${process.env.DB_PORT}/postgres`,
 });
@@ -25,10 +25,22 @@ const createDatabase = async (connection, database) => {
     await connection.query(sql);
 }
 
-conn.connect().then((connection) => {
-    await createUser(connection, process.env.DB_USER, process.env.DB_PASSWORD);
-    await createDatabase(connection, process.env.DB_NAME)
-    await createDatabase(connection, process.env.DB_TEST_NAME)
+conn.connect().then(async (connection) => {
+    try {
+      await createUser(connection, process.env.DB_USER, process.env.DB_PASSWORD);
+    } catch (e) {
+      console.log(`Error creating user: ${e}`);
+    }
+    try {
+      await createDatabase(connection, process.env.DB_NAME)
+    } catch (e) {
+      console.log(`Error creating main database: ${e}`);
+    }
+    try {
+      await createDatabase(connection, process.env.DB_TEST_NAME)
+    } catch (e) {
+      console.log(`Error creating testing database: ${e}`);
+    }
 
     process.exit();
 }).catch((err) => {
