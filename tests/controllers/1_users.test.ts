@@ -12,6 +12,11 @@ describe("Test users routes", (): void => {
         firstName: "Admin",
         lastName: "User",
       })
+      .expect((res): void => {
+        if (res.status != 200) {
+          console.log(JSON.stringify(res.body, null, 2));
+        }
+      })
       .expect(200)
       .expect("Content-Type", /json/);
     expect(res.body).toBeDefined();

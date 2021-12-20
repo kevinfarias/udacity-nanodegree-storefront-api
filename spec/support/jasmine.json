@@ -14,7 +14,7 @@
       }
     }
   ],
-  "stopSpecOnExpectationFailure": true,
-  "stopOnSpecFailure": true,
+  "stopSpecOnExpectationFailure": false,
+  "stopOnSpecFailure": false,
   "random": false
 }
